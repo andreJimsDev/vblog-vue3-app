@@ -38,12 +38,20 @@ export const useCommentStore = defineStore({
             });
             this.saveCommentsInDB();
         },
-        addReply(reply: string, parentOneId?: string, parentSecondId?: string) {
-            if (parentOneId) {
-                let comment = this.comments.find((c) => c.id === parentOneId);
+        addReply(reply: string, parentOneIds?: string[], parentSecondId?: string) {
+            let comment = undefined;
+            if (parentOneIds && parentOneIds.length && parentSecondId) {
+                let commentList = this.comments;
+                for (const id of parentOneIds) {
+                    comment = commentList.find((c) => c.id === id);
+                    if (comment) {
+                        commentList = comment.replies;
+                    }
+                }
                 if (parentSecondId && comment) {
-                    comment = comment.replies.find((c) => c.id === parentSecondId);
-                    console.log({comment})
+                    const result = comment.replies.find((c) => c.id === parentSecondId);
+                    if (result)
+                        comment = result;
                 }
                 if (comment) {
                     if (!comment.replies) {
@@ -56,8 +64,8 @@ export const useCommentStore = defineStore({
                         replies: []
                     });
                 }
-                this.saveCommentsInDB();
             }
+            this.saveCommentsInDB();
         },
         saveCommentsInDB() {
             localStorage.setItem('comments', JSON.stringify(this.comments));

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, onMounted, computed} from "vue";
+import {computed, onMounted, ref} from "vue";
 import Card from 'primevue/card';
 import Textarea from 'primevue/textarea';
 import {useCommentStore} from "./store/comment.store.ts";
@@ -11,7 +11,6 @@ const article = ref<Article>({
   title: "Lorem ipsum",
   content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In ultrices arcu eu justo ultricies, ut mollis orci mattis. Curabitur sagittis mi non erat maximus, nec mattis sem ultrices. Aliquam dapibus, dui accumsan accumsan finibus, metus nisl lobortis nisl, sed rhoncus mauris enim id purus. In rhoncus quam nec lacus eleifend, a gravida lectus posuere. Sed aliquet scelerisque lacinia. Etiam lectus est, finibus ac rutrum ac, sollicitudin ac diam. Quisque ut orci vitae ex tincidunt pharetra. Phasellus vestibulum vel tellus sit amet congue. Vivamus sem turpis, aliquet bibendum aliquet ut, sodales at quam. Phasellus fringilla ante sed risus ultrices finibus. Cras laoreet non ante vitae hendrerit. Nam lacinia consequat quam euismod tincidunt. Suspendisse interdum viverra tincidunt. Mauris viverra, diam sit amet tristique posuere, nunc nunc congue urna, ut vestibulum odio sem sed arcu."
 })
-
 const commentStore = useCommentStore();
 const comment = ref<string | null>(null);
 
@@ -19,11 +18,11 @@ onMounted(() => {
   commentStore.loadComments()
 });
 
-const comments = computed(() => commentStore.commentsSortedByDesc);
+const comments = computed(() => commentStore.comments);
 const totalComments = computed(() => commentStore.countTotalComments());
 
-const addReply = (reply: string, parentOneId?: string, parentSecondId?: string) => {
-  commentStore.addReply(reply, parentOneId, parentSecondId);
+const addReply = (reply: string, parentOneIds?: string[], parentSecondId?: string) => {
+  commentStore.addReply(reply, parentOneIds, parentSecondId);
 }
 
 const sendComment = () => {
@@ -55,21 +54,10 @@ const sendComment = () => {
     </Card>
     <Card style="width: 50rem; overflow: hidden">
       <template #content>
-        <div>
-          <div v-for="comment in comments" :key="comment.id" class="comment-container">
-            <div class="comment">
-              <CommentComponent :comment="comment" :on-submit-reply-comment="addReply"/>
-            </div>
-            <div v-if="comment.replies.length > 0" class="reply-container flex flex-column-reverse">
-              <div v-for="reply in comment.replies" :key="reply.id" class="reply">
-                <CommentComponent :comment="reply" :on-submit-reply-comment="addReply" :parent-id="comment.id"/>
-                <div v-if="reply.replies.length > 0" class="reply-container">
-                  <div v-for="secondReply in reply.replies" :key="secondReply.id" class="reply">
-                    <CommentComponent :comment="secondReply" :on-submit-reply-comment="addReply" :hidden-reply="true"/>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div v-for="comment in comments" :key="comment.id" class="comment-container">
+          <div class="comment reply-container flex flex-column-reverse">
+            <CommentComponent :comment="comment" :on-submit-reply-comment="addReply" :parent-id="comment.id"
+                              :parent-ids="[comment.id]"/>
           </div>
         </div>
       </template>
